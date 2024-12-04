@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Real-Time Chat and Video Call</title>
+    <style>
+        #messages { list-style-type: none; }
+        #messages li { margin: 5px; }
+        #video-container { display: flex; }
+        video { width: 300px; height: 200px; margin: 10px; }
+        .react-btn.active {
+    background-color: #d1e7dd; /* Light green background */
+    border: 1px solid #0f5132; /* Dark green border */
+}
+.react-btn {
+    transition: transform 0.1s ease;
+}
+
+.react-btn:active {
+    transform: scale(1.1); /* Scale up the button on click */
+}
+@keyframes bounce {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+}
+
+.react-btn.animate {
+    animation: bounce 0.3s ease; /* Apply bounce animation */
+}
+#messages{
+    background-image: url(https://i2.wp.com/www.techgrapple.com/wp-content/uploads/2016/07/WhatsApp-Chat-theme-iPhone-stock-744.jpg);
+    height: 500px;
+    width: 100%;
+    font-size: 30px;
+    font-style: italic;
+    overflow: scroll;
+    text-decoration: solid;
+    
+    
+}
+input{
+    background-color: white;
+    height: 30px;
+    width: 45%;
+    border-color: #0f5132;
+
+}
+button{
+    background-color: red;
+    height: 30px;
+    width: 150px;
+    color: white;
+}
+.container{
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    height: 100px;
+}
+    </style>
+</head>
+<body >
+    <script>
+        document.querySelectorAll('.react-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const messageId = this.closest('.message').dataset.id;
+        const reaction = this.dataset.reaction;
+
+        if (userReactions[messageId] === reaction) {
+            // User is removing their reaction
+            socket.emit('remove reaction', messageId, reaction);
+            delete userReactions[messageId]; // Remove the user's reaction
+            this.classList.remove('active'); // Remove active class
+        } else {
+            // User is adding a reaction
+            socket.emit('react to message', messageId, reaction);
+            userReactions[messageId] = reaction; // Store the user's reaction
+            this.classList.add('active'); // Add active class
+        }
+    });
+});
+function loadMessages(messages) {
+    messages.forEach(message => {
+        const messageElement = document.createElement('div');
+        messageElement.classList.add('message');
+        messageElement.dataset.id = message.id;
+        messageElement.innerHTML = `
+            <span>${message.text}</span>
+            <button class="react-btn" data-reaction="👍">👍</button>
+            <button class="react-btn" data-reaction="❤️">❤️</button>
+            <div class="reactions"></div>
+        `;
+        document.getElementById('messages').appendChild(messageElement);
+
+        // Set the active state for reactions
+        if (userReactions[message.id]) {
+            const activeButton = messageElement.querySelector(`.react-btn[data-reaction="${userReactions[message.id]}"]`);
+            if (activeButton) {
+                activeButton.classList.add('active');
+            }
+        }
+    });
+}
+document.querySelectorAll('.react-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const messageId = this.closest('.message').dataset.id;
+        const reaction = this.dataset.reaction;
+
+        if (userReactions[messageId] === reaction) {
+            // User is removing their reaction
+            socket.emit('remove reaction', messageId, reaction);
+            delete userReactions[messageId]; // Remove the user's reaction
+            this.classList.remove('active'); // Remove active class
+        } else {
+            // User is adding a reaction
+            socket.emit('react to message', messageId, reaction);
+            userReactions[messageId] = reaction; // Store the user's reaction
+            this.classList.add('active'); // Add active class
+            this.classList.add('animate'); // Add animation class
+            setTimeout(() => {
+                this.classList.remove('animate'); // Remove animation class after animation ends
+            }, 300); // Duration of the animation
+        }
+    });
+});
+    </script>
+    <div class="container">
+        <div class="col">
+            <h1>Real-Time Chat</h1>
+        </div>
+        <div class="col">
+            <img src="https://tse4.mm.bing.net/th?id=OIP.CDUfdGi7gvomtjGSOk0kYgHaGd&pid=Api&P=0&h=180" height="80px" width="80px" id="start-call" >
+            <div id="video-container"></div>
+
+            
+    <!-- <h2>Video Call</h2>
+    <button id="start-call">Start Video Call</button>
+    <div id="video-container"></div>
+   <br> -->
+
+        </div>
+    </div>
+    
+    
+   <br>
+    <ul id="messages"></ul>
+    <form id="form" action="">
+        <input id="message" autocomplete="off" placeholder="Type a message..." />
+        <!-- <input type="file" id="file" /> -->
+        <input type="submit" name="" id="" placeholder="send... /">
+    </form>
+    <br>
+    <input type="file" id="file" />
+
+<!-- 
+    <h2>Video Call</h2>
+    <button id="start-call">Start Video Call</button>
+    <div id="video-container"></div>
+   <br> -->
+   <!-- <div id="messages">
+    <div class="message" data-id="1">
+        <span>Hello!</span>
+        <button class="react-btn" data-reaction="👍">👍</button>
+        <button class="react-btn" data-reaction="❤️">❤️</button>
+        <div class="reactions"></div>
+    </div>
+</div> -->
+    
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const form = document.getElementById('form');
+        const input = document.getElementById('message');
+        const fileInput = document.getElementById('file');
+        const messages = document.getElementById('messages');
+        const videoContainer = document.getElementById('video-container');
+        const startCallButton = document.getElementById('start-call');
+       
+        const userReactions = {}; // Track user reactions
+
+document.querySelectorAll('.react-btn').forEach(button => {
+    button.addEventListener('click', function() {
+        const messageId = this.closest('.message').dataset.id;
+        const reaction = this.dataset.reaction;
+
+        if (userReactions[messageId] === reaction) {
+            // User is removing their reaction
+            socket.emit('remove reaction', messageId, reaction);
+            delete userReactions[messageId]; // Remove the user's reaction
+        } else {
+            // User is adding a reaction
+            socket.emit('react to message', messageId, reaction);
+            userReactions[messageId] = reaction; // Store the user's reaction
+        }
+    });
+});
+socket.on('message updated', (updatedMessage) => {
+    const messageElement = document.querySelector(`.message[data-id="${updatedMessage.id}"]`);
+    const reactionsContainer = messageElement.querySelector('.reactions');
+    reactionsContainer.innerHTML = ''; // Clear existing reactions
+
+    for (const [reaction, count] of Object.entries(updatedMessage.reactions)) {
+        const reactionElement = document.createElement('span');
+        reactionElement.textContent = `${reaction} ${count}`;
+        reactionsContainer.appendChild(reactionElement);
+    }
+});
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            if (input.value) {
+                socket.emit('chat message', input.value);
+                input.value = '';
+            }
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    socket.emit('chat image', event.target.result);
+                };
+                reader.readAsDataURL(file);
+                fileInput.value = '';
+            }
+        });
+
+        socket.on('chat message', function(msg) {
+            const item = document.createElement('li');
+            item.textContent = msg;
+            messages.appendChild(item);
+        });
+
+        socket.on('chat image', function(image) {
+            const item = document.createElement('li');
+            const img = document.createElement('img');
+            img.src = image;
+            img.style.width = '200px';
+            item.appendChild(img);
+            messages.appendChild(item);
+        });
+
+        // Video Call
+        let localStream;
+        let peerConnection;
+        const configuration = {
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        };
+
+        startCallButton.addEventListener('click', async () => {
+            localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+            const video = document.createElement('video');
+            video.srcObject = localStream;
+            video.play();
+            videoContainer.appendChild(video);
+
+            peerConnection = new RTCPeerConnection(configuration);
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+
+            peerConnection.onicecandidate = event => {
+                if (event.candidate) {
+                    socket.emit('ice-candidate', event.candidate);
+                }
+            };
+
+            peerConnection.ontrack = event => {
+                const remoteVideo = document.createElement('video');
+                remoteVideo.srcObject = event.streams[0];
+                remoteVideo.play();
+                videoContainer.appendChild(remoteVideo);
+            };
+
+            const offer = await peerConnection.createOffer();
+            await peerConnection.setLocalDescription(offer);
+            socket.emit('video-offer', offer);
+        });
+
+        socket.on('video-offer', async (offer) => {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            socket.emit('video-answer', answer);
+        });
+
+        socket.on('ice-candidate', candidate => {
+            peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        });
+    </script>
+</body>
+</html>
